@@ -11,7 +11,6 @@ from typing import List, Union
 import numpy as np
 import torch
 from PIL import Image
-from torch.utils import tensorboard
 
 from .. import np_make_image_grid, rank
 
@@ -22,7 +21,7 @@ _epoch = 0
 INFO = logging.INFO
 WARN = logging.WARN
 DEBUG = logging.DEBUG
-supported_backends = ["stdout", "json", "tensorboard", "image_dumper"]
+supported_backends = ["stdout", "json", "image_dumper"]
 _output_dir = None
 
 DEFAULT_SCALAR_LEVEL = DEBUG
@@ -49,24 +48,6 @@ class Backend(ABC):
 
     def finish(self):
         pass
-
-
-class TensorBoardBackend(Backend):
-    def __init__(self, output_dir: Path):
-        output_dir.mkdir(exist_ok=True, parents=True)
-        self.writer = tensorboard.SummaryWriter(log_dir=output_dir)
-        self.closed = False
-
-    def add_scalar(self, tag, value, **kwargs):
-        self.writer.add_scalar(tag, value, new_style=True, global_step=_global_step)
-
-    def finish(self):
-        if self.closed:
-            return
-        self.closed = True
-        self.writer.flush()
-        self.writer.close()
-        log("Tensorboard write done.")
 
 
 class StdOutBackend(Backend):
@@ -167,13 +148,9 @@ def init(
     _backends = []
     for backend in backends:
         if backend not in supported_backends:
-            raise ArgumentError(
-                f"{backend} not in supported. Has to be one of: {', '.join(backends)}"
-            )
+            raise ValueError(f"backend={backend} not supported.")
         if backend == "stdout":
             _backends.append(StdOutBackend(output_dir.joinpath("log.txt")))
-        if backend == "tensorboard":
-            _backends.append(TensorBoardBackend(output_dir.joinpath("tensorboard")))
         if backend == "json":
             _backends.append(JSONBackend(output_dir.joinpath("scalars.json")))
         if backend == "image_dumper":
