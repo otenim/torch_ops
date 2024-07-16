@@ -1,5 +1,4 @@
-from setuptools import setup, find_packages
-
+from setuptools import find_packages, setup
 
 setup(
     name="tops",
@@ -9,6 +8,10 @@ setup(
         "cloudpickle",
         "omegaconf",
         "easydict",
-        "validators"
+        "validators",
+        "numpy",
+        "Pillow",
+        "torch",
+        "pyyaml",
     ],
 )
